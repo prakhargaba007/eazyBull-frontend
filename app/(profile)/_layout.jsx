@@ -8,7 +8,7 @@ const AuthLayout = () => {
       <Stack
         screenOptions={{
           headerStyle: {
-            backgroundColor: "#fc4100",
+            backgroundColor: "#881b20",
           },
           headerTintColor: "#fff",
           headerTitleStyle: {
@@ -23,8 +23,32 @@ const AuthLayout = () => {
             headerShown: false,
           }}
         />
+        <Stack.Screen
+          name="Invite"
+          options={{
+            title: "Invite Friends",
+          }}
+        />
+        <Stack.Screen
+          name="Winners"
+          options={{
+            title: "Winners",
+          }}
+        />
+        <Stack.Screen
+          name="Info"
+          options={{
+            title: "My Info & Settings",
+          }}
+        />
+        <Stack.Screen
+          name="Support"
+          options={{
+            title: "24/7 Help and Support",
+          }}
+        />
       </Stack>
-      <StatusBar backgroundColor="#fc4100" barStyle={"light-content"} />
+      <StatusBar backgroundColor="#881b20" barStyle={"light-content"} />
     </>
   );
 };

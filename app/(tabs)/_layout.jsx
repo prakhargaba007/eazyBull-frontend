@@ -2,13 +2,12 @@ import { View, Text, StyleSheet, StatusBar } from "react-native";
 import React from "react";
 import { Tabs } from "expo-router";
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
-import Feather from "@expo/vector-icons/Feather";
-import AntDesign from "@expo/vector-icons/AntDesign";
+import { Entypo, FontAwesome6, MaterialIcons } from "@expo/vector-icons";
 
 const Tab = () => {
   function TabIcon({ icon, name, focused }) {
-    const iconColor = focused ? "#FFD700" : "#CDCDE0";
-    const textColor = focused ? "#FFD700" : "#CDCDE0";
+    const iconColor = focused ? "#881b20" : "#CDCDE0";
+    const textColor = focused ? "#881b20" : "#CDCDE0";
     return (
       <View
         style={styles.container}
@@ -19,8 +18,8 @@ const Tab = () => {
           className={`${focused ? "font-psemibold" : "font-pregular"} text-xs`}
           style={{
             color: textColor,
-            fontWeight: focused ? "900" : "400",
-            // fontSize: 12,
+            fontWeight: focused ? "600" : "400",
+            fontSize: 12,
           }}
         >
           {name}
@@ -35,11 +34,8 @@ const Tab = () => {
         screenOptions={{
           tabBarShowLabel: false,
           tabBarStyle: {
-            backgroundColor: "#fc4100",
-            minHeight: 65,
-            paddingBottom: 5,
-            paddingTop: 5,
-            justifyContent: "space-evenly", // Changed from "space-around" to "space-evenly"
+            minHeight: 55,
+            justifyContent: "space-evenly",
           },
           tabBarActiveTintColor: "#FFA001",
           tabBarInactiveTintColor: "#CDCDE0",
@@ -52,9 +48,7 @@ const Tab = () => {
             headerShown: false,
             tabBarIcon: ({ focused }) => (
               <TabIcon
-                icon={(color) => (
-                  <Feather name="home" size={24} color={color} />
-                )}
+                icon={(color) => <Entypo name="home" size={22} color={color} />}
                 name={"Home"}
                 focused={focused}
               />
@@ -64,18 +58,41 @@ const Tab = () => {
         <Tabs.Screen
           name="MyPosition"
           options={{
-            title: "My Position",
-            headerShown: false,
+            title: "My Portfolio",
+            headerStyle: { backgroundColor: "#881b20" },
+            headerTintColor: "#fff",
             tabBarIcon: ({ focused }) => (
               <TabIcon
                 icon={(color) => (
                   <MaterialCommunityIcons
                     name="bag-checked"
-                    size={24}
+                    size={22}
                     color={color}
                   />
                 )}
-                name={"Positions"}
+                name={"Portfolio"}
+                focused={focused}
+              />
+            ),
+          }}
+        />
+        <Tabs.Screen
+          name="Charts"
+          options={{
+            title: "Charts",
+            // headerStyle: { backgroundColor: "#881b20" },
+            headerShown: false,
+            // headerTintColor: "#fff",
+            tabBarIcon: ({ focused }) => (
+              <TabIcon
+                icon={(color) => (
+                  <MaterialIcons
+                    name="candlestick-chart"
+                    size={22}
+                    color={color}
+                  />
+                )}
+                name={"Charts"}
                 focused={focused}
               />
             ),
@@ -84,14 +101,15 @@ const Tab = () => {
         <Tabs.Screen
           name="Learn"
           options={{
-            title: "Learn",
-            headerShown: false,
+            headerStyle: { backgroundColor: "#881b20" },
+            headerTintColor: "#fff",
+            title: "Live News",
             tabBarIcon: ({ focused }) => (
               <TabIcon
                 icon={(color) => (
-                  <AntDesign name="book" size={24} color={color} />
+                  <FontAwesome6 name="graduation-cap" size={20} color={color} />
                 )}
-                name={"Learn"}
+                name={"News"}
                 focused={focused}
               />
             ),

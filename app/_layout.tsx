@@ -3,6 +3,11 @@ import { StatusBar } from "react-native";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Provider } from "react-redux";
 import { store } from "../redux/store";
+// import { NativeWindStyleSheet } from "nativewind";
+
+// NativeWindStyleSheet.setOutput({
+//   default: "native", // Use "native" or "web" depending on your environment.
+// });
 
 const queryClient = new QueryClient();
 export default function RootLayout() {

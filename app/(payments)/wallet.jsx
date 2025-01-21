@@ -17,7 +17,9 @@ const Wallet = () => {
   useEffect(() => {
     dispatch(fetchUser());
   }, []);
-  const formattedMoney = new Intl.NumberFormat("en-IN").format(userInfo.money);
+  console.log("userInfo", userInfo);
+
+  const formattedMoney = new Intl.NumberFormat("en-IN").format(userInfo?.money);
   return (
     <SafeAreaView style={styles.container}>
       {/* Balance Container */}

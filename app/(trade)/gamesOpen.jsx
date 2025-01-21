@@ -20,6 +20,9 @@ import { fetchUser } from "../../redux/slices/userSlice";
 // import { useSafeAreaInsets } from "react-native-safe-area-context";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import moment from "moment";
+import { Ionicons } from "@expo/vector-icons";
+import TabButtons from "../../components/TabButtons";
+import { transformContestData } from "../../utils/transformContestData";
 
 const ITEMS_PER_PAGE = 10;
 const { width } = Dimensions.get("window");
@@ -41,6 +44,8 @@ const GamesOpen = () => {
 
   const [activeTab, setActiveTab] = useState("all");
   const [contests, setContests] = useState([]);
+  // console.log("contests", contests);-
+
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [loadingMore, setLoadingMore] = useState(false);
@@ -61,36 +66,16 @@ const GamesOpen = () => {
     dispatch(fetchUser());
   }, [instrumentId]);
 
-  const transformContestData = (contest) => ({
-    id: contest._id,
-    title: contest.title,
-    prizePool: contest.prizePool.toLocaleString(),
-    firstPrize: Math.floor(contest.prizePool * 0.3).toLocaleString(),
-    spotsLeft: contest.maxParticipants - contest.currentParticipants,
-    totalSpots: contest.maxParticipants,
-    maxWinners: Math.floor(contest.maxParticipants * 0.2),
-    winPercentage: Math.floor(
-      (contest.currentParticipants / contest.maxParticipants) * 100
-    ),
-    discountPrice: contest.discountEntryFee,
-    originalEntryFee: contest.originalEntryFee,
-    status: contest.status,
-    participants: contest.participants,
-    startTime: contest.startTime,
-    endTime: contest.endTime,
-    description: contest.description,
-    compitionId: contest._id,
-  });
-
   const fetchContests = async (pageNum = 1, shouldRefresh = false) => {
     console.log(
       `${process.env.EXPO_PUBLIC_SERVER}/contests/instrument/${instrumentId}?ct=${competitionType}`
     );
+    // console.log("reloaded");
 
     try {
       setLoading(true);
       const authToken = await AsyncStorage.getItem("token");
-      console.log("tokensss", authToken);
+      // console.log("tokensss", authToken);
       const response = await fetch(
         `${process.env.EXPO_PUBLIC_SERVER}/contests/instrument/${instrumentId}?ct=${competitionType}`,
         {
@@ -101,33 +86,40 @@ const GamesOpen = () => {
         }
       );
 
-      console.log(response);
+      // console.log(response);
 
       if (!response.ok) {
         throw new Error("Network response was not ok");
       }
 
       const data = await response.json();
-      console.log(data);
+      console.log("Raw contest data:", data);
 
       const transformedContests = data.map(transformContestData);
+      console.log("transformedContests", transformedContests);
+
       await getTimer(transformedContests);
       // userInfo.
 
-      if (shouldRefresh) {
-        setContests(transformedContests);
-      } else {
-        setContests((prev) => [...prev, ...transformedContests]);
-      }
+      // if (shouldRefresh) {
+      setContests(transformedContests);
+      // setContests(data);
+      // } else {
+      //   setContests((prev) => [...prev, ...transformedContests]);
+      // }
 
       setHasMore(transformedContests.length === ITEMS_PER_PAGE);
       setError(null);
     } catch (error) {
-      console.log(error);
+      console.error(error); // Log the full error for debugging
 
-      setError("Failed to load contests. Please try again.");
-      Alert.alert("Error", error);
-      // Alert.alert("Error", "Failed to load contests. Please try again.");
+      // Use error.message if it's available; otherwise, provide a default error message
+      const errorMessage =
+        error?.message || "Failed to load contests. Please try again.";
+      setError(errorMessage);
+
+      // Display the alert with a string message
+      Alert.alert("Error", errorMessage);
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -202,6 +194,7 @@ const GamesOpen = () => {
           },
         }
       );
+      console.log("response", response);
 
       if (!response.ok) {
         const errorData = await response.json();
@@ -218,21 +211,6 @@ const GamesOpen = () => {
       );
     }
   };
-
-  const TabButton = ({ title, isActive, onPress }) => (
-    <TouchableOpacity
-      style={[styles.tabButton, isActive && styles.activeTabButton]}
-      onPress={onPress}
-      activeOpacity={0.7}
-    >
-      <Text
-        style={[styles.tabButtonText, isActive && styles.activeTabButtonText]}
-      >
-        {title}
-      </Text>
-      {isActive && <View style={styles.activeIndicator} />}
-    </TouchableOpacity>
-  );
 
   const renderFooter = () => {
     if (!loadingMore) return null;
@@ -273,7 +251,7 @@ const GamesOpen = () => {
 
     return (
       <ContestCard
-        {...item}
+        item={item}
         isJoined={isJoined}
         onEnter={() => {
           setSelectedContest(item);
@@ -293,27 +271,23 @@ const GamesOpen = () => {
 
   return (
     <View style={[styles.box]}>
-      <View style={styles.tabContainer}>
-        <TabButton
-          title="All Contests"
-          isActive={activeTab === "all"}
-          onPress={() => setActiveTab("all")}
-        />
-        <TabButton
-          title="My Contests"
-          isActive={activeTab === "my"}
-          onPress={() => setActiveTab("my")}
-        />
-      </View>
+      <TabButtons
+        setActiveTab={setActiveTab}
+        activeTab={activeTab}
+        data={[
+          { id: 1, title: "All Contests", value: "all" },
+          { id: 2, title: "My Contests", value: "my" },
+        ]}
+      />
 
-      {nextGame && (
+      {/* {nextGame && (
         <View style={styles.timerContainer}>
           <Text style={styles.timerText}>
             Next {instrumentName} {competitionType} game starts in
           </Text>
           <Text style={styles.timerCountdown}>{formatTime(timeLeft)}</Text>
         </View>
-      )}
+      )} */}
 
       <FlatList
         data={filteredContests}
@@ -346,29 +320,58 @@ const GamesOpen = () => {
       >
         <View style={styles.modalContainer}>
           <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>Confirm Entry</Text>
-            <Text style={styles.modalText}>
-              Are you sure you want to enter this contest?
-            </Text>
-            <Text style={styles.entryFeeText}>
-              Entry Fee: ₹{selectedContest?.discountPrice}
-            </Text>
-            <View style={styles.modalButtons}>
+            <View style={styles.header}>
               <TouchableOpacity
-                style={[styles.modalButton, styles.cancelButton]}
                 onPress={() => setModalVisible(false)}
+                style={styles.closeButton}
               >
-                <Text style={styles.buttonText}>Cancel</Text>
+                <Ionicons name="close" size={24} color="#000" />
               </TouchableOpacity>
-              <TouchableOpacity
-                style={[styles.modalButton, styles.confirmButton]}
-                onPress={() => handleJoinContest(selectedContest?.id)}
-              >
-                <Text style={[styles.buttonText, styles.confirmButtonText]}>
-                  Confirm
-                </Text>
-              </TouchableOpacity>
+              <Text style={styles.title}>Confirmation</Text>
             </View>
+
+            <Text style={styles.amountText}>
+              Amount Unutilised + Winnings= 100
+            </Text>
+
+            <View style={styles.entryContainer}>
+              <Text style={styles.entryLabel}>Entry</Text>
+              <Text style={styles.entryAmount}>
+                {selectedContest?.discountPrice}
+              </Text>
+            </View>
+
+            {/* {hasDiscount && ( */}
+            <View style={styles.discountContainer}>
+              <Text style={styles.discountLabel}>DISCOUNT USING</Text>
+              <View style={styles.discountRow}>
+                <View style={styles.discountBadge}>
+                  <Text style={styles.discountBadgeText}>%</Text>
+                </View>
+                <Text style={styles.discountText}>Discount Pass</Text>
+                <Text style={styles.discountAmount}>-0</Text>
+              </View>
+            </View>
+            {/* )} */}
+
+            <View style={styles.totalContainer}>
+              <Text style={styles.toPayLabel}>To Pay</Text>
+              <Text style={styles.toPayAmount}>
+                {selectedContest?.discountPrice}
+              </Text>
+            </View>
+
+            <Text style={styles.termsText}>
+              I agree with the standard{" "}
+              <Text style={{ fontWeight: 800 }}>T&Cs</Text>
+            </Text>
+
+            <TouchableOpacity
+              style={styles.joinButton}
+              onPress={() => handleJoinContest(selectedContest?.id)}
+            >
+              <Text style={styles.joinButtonText}>JOIN CONTEST</Text>
+            </TouchableOpacity>
           </View>
         </View>
       </Modal>
@@ -395,7 +398,6 @@ const styles = StyleSheet.create({
   tabContainer: {
     flexDirection: "row",
     backgroundColor: "white",
-    padding: 10,
     ...Platform.select({
       ios: {
         shadowColor: "#000",
@@ -423,7 +425,7 @@ const styles = StyleSheet.create({
     color: "#666",
   },
   activeTabButtonText: {
-    color: "#fc4100",
+    color: "#881b20",
   },
   activeIndicator: {
     position: "absolute",
@@ -431,14 +433,13 @@ const styles = StyleSheet.create({
     left: "25%",
     right: "25%",
     height: 3,
-    backgroundColor: "#fc4100",
+    backgroundColor: "#881b20",
     borderRadius: 1.5,
   },
   timerContainer: {
     backgroundColor: "#ffffff",
     borderRadius: 10,
     padding: 15,
-
     marginTop: 15,
     marginHorizontal: 15,
     alignItems: "center",
@@ -454,7 +455,7 @@ const styles = StyleSheet.create({
   },
   timerCountdown: {
     fontSize: 24,
-    color: "#fc4100",
+    color: "#881b20",
     marginTop: 5,
   },
   emptyState: {
@@ -483,30 +484,6 @@ const styles = StyleSheet.create({
   footerLoader: {
     paddingVertical: 20,
     alignItems: "center",
-  },
-  modalContainer: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: "rgba(0, 0, 0, 0.5)",
-  },
-  modalContent: {
-    backgroundColor: "white",
-    borderRadius: 20,
-    padding: 20,
-    width: width * 0.8,
-    alignItems: "center",
-    ...Platform.select({
-      ios: {
-        shadowColor: "#000",
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.25,
-        shadowRadius: 4,
-      },
-      android: {
-        elevation: 5,
-      },
-    }),
   },
   modalTitle: {
     fontSize: 20,
@@ -548,5 +525,112 @@ const styles = StyleSheet.create({
   },
   confirmButtonText: {
     color: "white",
+  },
+
+  modalContainer: {
+    flex: 1,
+    justifyContent: "flex-end",
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+  },
+  modalContent: {
+    backgroundColor: "white",
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    padding: 20,
+  },
+  header: {
+    flexDirection: "row",
+    justifyContent: "center",
+    alignItems: "center",
+    marginBottom: 10,
+  },
+  title: {
+    fontSize: 18,
+    fontWeight: "600",
+    textAlign: "center",
+  },
+  closeButton: {
+    position: "absolute",
+    left: -15,
+    padding: 15,
+  },
+  amountText: {
+    textAlign: "center",
+    color: "#666",
+    marginBottom: 20,
+  },
+  entryContainer: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginBottom: 15,
+  },
+  entryLabel: {
+    fontSize: 16,
+  },
+  entryAmount: {
+    fontSize: 16,
+    fontWeight: "600",
+    marginRight: 10,
+  },
+  discountContainer: {
+    backgroundColor: "#f8fdf9",
+    padding: 15,
+    borderRadius: 8,
+    marginBottom: 15,
+  },
+  discountLabel: {
+    color: "#666",
+    marginBottom: 8,
+  },
+  discountRow: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  discountBadge: {
+    backgroundColor: "#4CAF50",
+    borderRadius: 4,
+    width: 24,
+    height: 24,
+    justifyContent: "center",
+    alignItems: "center",
+    marginRight: 8,
+  },
+  discountBadgeText: {
+    color: "white",
+    fontWeight: "600",
+  },
+  discountText: {
+    flex: 1,
+  },
+  discountAmount: {
+    fontWeight: "600",
+  },
+  totalContainer: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginBottom: 20,
+  },
+  toPayLabel: {
+    fontSize: 16,
+  },
+  toPayAmount: {
+    fontSize: 16,
+    fontWeight: "600",
+    marginRight: 10,
+  },
+  termsText: {
+    color: "#666",
+    marginBottom: 20,
+  },
+  joinButton: {
+    backgroundColor: "#008936",
+    borderRadius: 8,
+    paddingVertical: 10,
+    alignItems: "center",
+  },
+  joinButtonText: {
+    color: "white",
+    fontWeight: "600",
+    fontSize: 16,
   },
 });

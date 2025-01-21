@@ -8,9 +8,9 @@ export const fetchUser = createAsyncThunk(
   async (_, thunkAPI) => {
     try {
       const token = await AsyncStorage.getItem("token");
-      // console.log("tokensss", token);
 
       if (!token) {
+        console.log("tokensss", token);
         throw new Error("No token found");
       }
 
@@ -23,6 +23,7 @@ export const fetchUser = createAsyncThunk(
           },
         }
       );
+      // console.log("response", response);
 
       if (!response.ok) {
         throw new Error("Failed to fetch user");
@@ -33,6 +34,8 @@ export const fetchUser = createAsyncThunk(
 
       return userData;
     } catch (error) {
+      console.log(error);
+
       return thunkAPI.rejectWithValue(error.message);
     }
   }

@@ -1,12 +1,12 @@
 import { StyleSheet, Text, View } from "react-native";
 import React from "react";
-import { SafeAreaView } from "react-native-safe-area-context";
+import CryptoNewsFeed from "../../components/News";
 
 const Learn = () => {
   return (
-    <SafeAreaView>
-      <Text>Learn</Text>
-    </SafeAreaView>
+    <View style={{ flex: 1 }}>
+      <CryptoNewsFeed />
+    </View>
   );
 };
 

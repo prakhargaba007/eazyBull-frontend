@@ -24,56 +24,46 @@ import FontAwesome5 from "@expo/vector-icons/FontAwesome5";
 import { useRouter } from "expo-router";
 import AntDesign from "@expo/vector-icons/AntDesign";
 import Wallet from "../../components/Wallet";
-
-const itemIcons = {
-  Bitcoin: "bitcoin",
-  Ethereum: "ethereum",
-  Ripple: "alpha-x-circle",
-  Litecoin: "litecoin",
-  Gold: "gold",
-  Silver: "podium-silver",
-  Platinum: "alpha-p-circle",
-  Palladium: "alpha-p-box",
-  "S&P 500": "chart-bar",
-  Nasdaq: "chart-bell-curve",
-  "Nikkei 225": "chart-areaspline",
-};
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import BitcoinPriceCard from "../../components/PriceCard";
 
 const HomeContent = () => {
   const dispatch = useDispatch();
   const userInfo = useSelector((state) => state.user.userInfo);
   const router = useRouter();
   const [selectedMode, setSelectedMode] = useState("Bullet");
-  const [timeLeft, setTimeLeft] = useState(900);
+  // const [timeLeft, setTimeLeft] = useState(900);
   const [instruments, setInstruments] = useState([]);
   // console.log(instruments);
 
   const [loading, setLoading] = useState(true);
 
-  const getInitialTime = useCallback((mode) => {
-    switch (mode) {
-      case "Bullet":
-        return 900;
-      case "Rapid":
-        return 2700;
-      case "Classic":
-        return 4500;
-      default:
-        return 900;
-    }
-  }, []);
+  // const getInitialTime = useCallback((mode) => {
+  //   switch (mode) {
+  //     case "Bullet":
+  //       return 900;
+  //     case "Rapid":
+  //       return 2700;
+  //     case "Classic":
+  //       return 4500;
+  //     default:
+  //       return 900;
+  //   }
+  // }, []);
 
   useEffect(() => {
     const fetchInstruments = async () => {
       try {
         console.log("hello");
+        console.log(
+          "process.env.EXPO_PUBLIC_SERVER",
+          process.env.EXPO_PUBLIC_SERVER
+        );
 
         const response = await fetch(
           process.env.EXPO_PUBLIC_SERVER + "/instrument"
         );
-        // console.log(response);
         const data = await response.json();
-        // console.log(data);
 
         setInstruments(data);
       } catch (error) {
@@ -86,16 +76,20 @@ const HomeContent = () => {
     dispatch(fetchUser());
   }, []);
 
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setTimeLeft((prevTime) => {
-        if (prevTime > 0) return prevTime - 1;
-        return getInitialTime(selectedMode);
-      });
-    }, 1000);
+  // useEffect(() => {
+  //   const timer = setInterval(() => {
+  //     setTimeLeft((prevTime) => {
+  //       if (prevTime > 0) return prevTime - 1;
+  //       return getInitialTime(selectedMode);
+  //     });
+  //   }, 1000);
+  //   // name();
 
-    return () => clearInterval(timer);
-  }, [selectedMode, getInitialTime]);
+  //   return () => clearInterval(timer);
+  // }, [selectedMode, getInitialTime]);
+  // async function name() {
+  //   console.log(await AsyncStorage.getItem("token"));
+  // }
 
   // const formatTime = (seconds) => {
   //   const hours = Math.floor(seconds / 3600);
@@ -114,14 +108,14 @@ const HomeContent = () => {
       ]}
       onPress={() => {
         setSelectedMode(mode);
-        setTimeLeft(getInitialTime(mode));
+        // setTimeLeft(getInitialTime(mode));
       }}
       activeOpacity={0.7}
     >
       <FontAwesome5
         name={icon}
-        size={24}
-        color={selectedMode === mode ? "#fc4100" : "#333"}
+        size={18}
+        color={selectedMode === mode ? "#881b20" : "#333"}
       />
       <Text
         style={[
@@ -134,57 +128,31 @@ const HomeContent = () => {
     </TouchableOpacity>
   );
 
-  const CategorySection = ({ title, type }) => {
-    const filteredItems = instruments.filter(
-      (item) => item.type.toLowerCase() === type.toLowerCase()
-    );
-
-    if (filteredItems.length === 0) return null;
-
+  const CategorySection = () => {
     return (
-      <View style={styles.categorySection}>
-        <Text style={styles.categoryTitle}>{title}</Text>
-        {filteredItems.map((item) => {
+      <>
+        {instruments.map((item) => {
           return (
-            <View key={item._id} style={styles.itemContainer}>
-              <View style={styles.itemLeftSection}>
-                <MaterialCommunityIcons
-                  name={itemIcons[item.title] || "help-circle"}
-                  size={24}
-                  color="#333"
-                  style={styles.itemIcon}
-                />
-                <Text style={styles.itemName}>{item.title}</Text>
-              </View>
-              <TouchableOpacity
-                activeOpacity={0.5}
-                onPress={() =>
-                  router.push({
-                    pathname: "gamesOpen",
-                    params: {
-                      instrumentId: item._id,
-                      competitionType: selectedMode,
-                      symbol: item.symbol,
-                      instrumentName: item.title,
-                    },
-                  })
-                }
-              >
-                <LinearGradient
-                  colors={["#fc4100", "#fca600"]}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 0 }}
-                  style={styles.tradeButton}
-                >
-                  <Text style={styles.tradeButtonText}>
-                    <AntDesign name="arrowright" size={20} color="white" />
-                  </Text>
-                </LinearGradient>
-              </TouchableOpacity>
-            </View>
+            <TouchableOpacity
+              key={item._id}
+              activeOpacity={0.8}
+              onPress={() =>
+                router.push({
+                  pathname: "gamesOpen",
+                  params: {
+                    instrumentId: item._id,
+                    competitionType: selectedMode,
+                    symbol: item.symbol,
+                    instrumentName: item.title,
+                  },
+                })
+              }
+            >
+              <BitcoinPriceCard data={item} />
+            </TouchableOpacity>
           );
         })}
-      </View>
+      </>
     );
   };
 
@@ -203,7 +171,7 @@ const HomeContent = () => {
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      <StatusBar barStyle="light-content" backgroundColor="#fc4100" />
+      <StatusBar barStyle="light-content" backgroundColor="#881b20" />
       <View style={styles.container}>
         <View style={styles.header}>
           <TouchableOpacity
@@ -251,7 +219,8 @@ const HomeContent = () => {
         </View>
         <ScrollView style={styles.scrollView}>
           <View style={styles.contentContainer}>
-            <Text style={styles.welcomeText}>Welcome to the game!</Text>
+            <Text style={styles.welcomeText}>Upcoming Tournaments</Text>
+            <CategorySection />
             {/* 
             <View style={styles.timerContainer}>
               <Text style={styles.timerText}>
@@ -260,9 +229,9 @@ const HomeContent = () => {
               <Text style={styles.timerCountdown}>{formatTime(timeLeft)}</Text>
             </View> */}
 
-            <CategorySection title="Crypto Currencies" type="cryptocurrency" />
+            {/* <CategorySection title="Crypto Currencies" type="cryptocurrency" />
             <CategorySection title="Precious Metals" type="forex" />
-            <CategorySection title="Stock Indices" type="indices" />
+            <CategorySection title="Stock Indices" type="indices" /> */}
           </View>
         </ScrollView>
       </View>
@@ -287,7 +256,7 @@ const styles = StyleSheet.create({
   },
   header: {
     flexDirection: "row",
-    backgroundColor: "#fc4100",
+    backgroundColor: "#881b20",
     justifyContent: "space-between",
     alignItems: "center",
     paddingVertical: 7,
@@ -344,7 +313,7 @@ const styles = StyleSheet.create({
   },
   gameModeButton: {
     alignItems: "center",
-    padding: 10,
+    paddingVertical: 2,
     paddingHorizontal: 35,
     borderRadius: 8,
   },
@@ -353,24 +322,26 @@ const styles = StyleSheet.create({
   },
   gameModeText: {
     marginTop: 5,
-    fontSize: 14,
+    fontSize: 12,
     fontWeight: "bold",
     color: "#333",
   },
   selectedGameModeText: {
-    color: "#fc4100",
+    color: "#881b20",
   },
   scrollView: {
     flex: 1,
     backgroundColor: "#f8f9fa",
   },
   contentContainer: {
-    padding: 20,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
   },
   welcomeText: {
-    fontSize: 24,
+    fontSize: 20,
     color: "#333",
-    marginBottom: 20,
+    fontWeight: "600",
+    // marginBottom: 20,
   },
   categorySection: {
     marginBottom: 25,

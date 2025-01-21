@@ -1,4 +1,4 @@
-import { StatusBar, Text, View } from "react-native";
+import { Image, StatusBar, Text, View } from "react-native";
 import React, { useEffect, useState } from "react";
 import { router, Stack, useLocalSearchParams } from "expo-router";
 import { useDispatch, useSelector } from "react-redux";
@@ -69,20 +69,16 @@ const AuthLayout = () => {
 
   function MainHeader() {
     return (
-      <>
-        <Text>{t2}</Text>
-        <Wallet
-          money={tradeBal}
-          onPress={() =>
-            router.push({
-              pathname: "tradeHistory",
-              params: {
-                tradeId: tradeId._id,
-              },
-            })
-          }
-        />
-      </>
+      <View style={{ flexDirection: "row", gap: 85 }}>
+        <View style={{ justifyContent: "center", alignItems: "center" }}>
+          <Text style={{ color: "#fff" }}>Ends in</Text>
+          <Text style={{ color: "#fff" }}>{t2}</Text>
+        </View>
+        <View style={{ justifyContent: "center", alignItems: "center" }}>
+          <Text style={{ color: "#fff" }}>P/L</Text>
+          <Text style={{ color: "#fff" }}>-25,485</Text>
+        </View>
+      </View>
     );
   }
 
@@ -91,7 +87,7 @@ const AuthLayout = () => {
       <Stack
         screenOptions={{
           headerStyle: {
-            backgroundColor: "#fc4100",
+            backgroundColor: "#881b20",
           },
           headerTintColor: "#fff",
           headerTitleStyle: {
@@ -101,13 +97,24 @@ const AuthLayout = () => {
       >
         <Stack.Screen
           name="main"
-          options={({ route }) => {
-            return {
-              title: route?.params?.instrumentName || "Trade",
-              headerRight: () => <MainHeader />,
-            };
-          }}
+          options={({ route }) => ({
+            headerTitle: () => (
+              <Image
+                source={require("../../assets/images/easybull-high-resolution-logo-transparent.png")}
+                style={{
+                  marginTop: 5,
+                  width: 40,
+                  height: 40,
+                  resizeMode: "contain",
+                  marginLeft: -20,
+                }}
+              />
+            ),
+            headerRight: () => <MainHeader />,
+            headerTitleAlign: "left",
+          })}
         />
+
         <Stack.Screen
           name="gamesOpen"
           options={({ route }) => {
@@ -127,7 +134,7 @@ const AuthLayout = () => {
           }}
         />
       </Stack>
-      <StatusBar backgroundColor="#fc4100" barStyle={"light"} />
+      <StatusBar backgroundColor="#881b20" barStyle={"light"} />
     </>
   );
 };

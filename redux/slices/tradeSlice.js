@@ -5,7 +5,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 export const fetchTradeHistory = createAsyncThunk(
   "trade/fetchHistory",
   async (tradeId, thunkAPI) => {
-    console.log("tradeIdD", tradeId);
+    // console.log("tradeIdD", tradeId);
 
     try {
       const token = await AsyncStorage.getItem("token");
@@ -29,7 +29,7 @@ export const fetchTradeHistory = createAsyncThunk(
       }
 
       const tradeData = await response.json();
-      console.log("tradeDataaa", tradeData);
+      // console.log("tradeDataaa", tradeData);
 
       return tradeData;
     } catch (error) {
@@ -101,7 +101,7 @@ const tradeSlice = createSlice({
         state.currentContest = tradeData.contest;
         state.totalBalance = tradeData.totalBalance;
         state.profitLoss = tradeData.profitLoss;
-        state.trades = tradeData.trade;
+        state.position = tradeData.trade;
       }
       state.status = "succeeded";
     },
@@ -110,7 +110,7 @@ const tradeSlice = createSlice({
       state.currentContest = null;
       state.totalBalance = 0;
       state.profitLoss = 0;
-      state.trades = [];
+      state.position = [];
       state.status = "idle";
       state.error = null;
       state.tradeStatus = "idle";
@@ -130,14 +130,14 @@ const tradeSlice = createSlice({
       .addCase(fetchTradeHistory.fulfilled, (state, action) => {
         state.status = "succeeded";
         const tradeData = action.payload; // Assuming array with one object
-        console.log("tradeData", tradeData);
+        // console.log("tradeData", tradeData);
 
         if (tradeData) {
           state.tradeHistory = tradeData;
           state.currentContest = tradeData.contest._id;
           state.totalBalance = tradeData.totalBalance;
           state.profitLoss = tradeData.profitLoss;
-          state.trades = tradeData.trade;
+          state.position = tradeData.trade;
           state.start = tradeData.contest.startTime;
           state.end = tradeData.contest.endTime;
         }
@@ -151,7 +151,8 @@ const tradeSlice = createSlice({
         state.tradeStatus = "loading";
       })
       .addCase(placeTrade.fulfilled, (state, action) => {
-        console.log("action", action);
+        // console.log("action", action);
+        // console.log("state.position", state.position);
 
         state.tradeStatus = "succeeded";
         // Add new trade to trades array
@@ -162,7 +163,7 @@ const tradeSlice = createSlice({
           remainingBalance: action.payload.result.totalBalance,
           tradeDate: new Date().toISOString(),
         };
-        state.trades.unshift(newTrade);
+        state.tradeHistory.position.unshift(newTrade);
         state.totalBalance = action.payload.result.totalBalance;
       })
       .addCase(placeTrade.rejected, (state, action) => {

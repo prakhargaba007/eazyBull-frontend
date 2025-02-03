@@ -67,9 +67,9 @@ const GamesOpen = () => {
   }, [instrumentId]);
 
   const fetchContests = async (pageNum = 1, shouldRefresh = false) => {
-    console.log(
-      `${process.env.EXPO_PUBLIC_SERVER}/contests/instrument/${instrumentId}?ct=${competitionType}`
-    );
+    // console.log(
+    //   `${process.env.EXPO_PUBLIC_SERVER}/contests/instrument/${instrumentId}?ct=${competitionType}`
+    // );
     // console.log("reloaded");
 
     try {
@@ -86,17 +86,17 @@ const GamesOpen = () => {
         }
       );
 
-      // console.log(response);
+      // console.log("response", response);
 
       if (!response.ok) {
         throw new Error("Network response was not ok");
       }
 
       const data = await response.json();
-      console.log("Raw contest data:", data);
+      // console.log("Raw contest data:", data);
 
       const transformedContests = data.map(transformContestData);
-      console.log("transformedContests", transformedContests);
+      // console.log("transformedContests", transformedContests);
 
       await getTimer(transformedContests);
       // userInfo.
@@ -194,7 +194,7 @@ const GamesOpen = () => {
           },
         }
       );
-      console.log("response", response);
+      // console.log("response", response);
 
       if (!response.ok) {
         const errorData = await response.json();
@@ -216,7 +216,7 @@ const GamesOpen = () => {
     if (!loadingMore) return null;
     return (
       <View style={styles.footerLoader}>
-        <ActivityIndicator size="small" color="#fc4100" />
+        <ActivityIndicator size="small" color="#881b20" />
       </View>
     );
   };
@@ -242,12 +242,12 @@ const GamesOpen = () => {
     activeTab === "all"
       ? contests
       : contests.filter((contest) =>
-          contest.participants.some((p) => p.user === userInfo._id)
+          contest.participants.some((p) => p.user === userInfo?._id)
         );
 
   const renderItem = ({ item }) => {
     // Check if the current user has joined this contest
-    const isJoined = item.participants.some((p) => p.user === userInfo._id);
+    const isJoined = item.participants.some((p) => p.user === userInfo?._id);
 
     return (
       <ContestCard
@@ -264,7 +264,7 @@ const GamesOpen = () => {
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#fc4100" />
+        <ActivityIndicator size="large" color="#881b20" />
       </View>
     );
   }

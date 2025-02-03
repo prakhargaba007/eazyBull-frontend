@@ -1,50 +1,18 @@
-import React from "react";
-import { View, Text, StyleSheet } from "react-native";
-import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
+import { router } from "expo-router";
+import React, { useEffect, useRef, useState } from "react";
+import { View, Text, StyleSheet, Image, TouchableOpacity } from "react-native";
 
-const BitcoinPriceCard = ({ data }) => {
-  const itemIcons = {
-    Bitcoin: "bitcoin",
-    Ethereum: "ethereum",
-    Ripple: "alpha-x-circle",
-    Litecoin: "litecoin",
-    Gold: "gold",
-    Silver: "podium-silver",
-    Platinum: "alpha-p-circle",
-    Palladium: "alpha-p-box",
-    "S&P 500": "chart-bar",
-    Nasdaq: "chart-bell-curve",
-    "Nikkei 225": "chart-areaspline",
-  };
+const BitcoinPriceCard = ({ data, priceColor }) => {
+  const currentPrice = Number(data.price);
 
   return (
     <View style={styles.container}>
-      {/* Header */}
-      {/* <View style={styles.header}>
-        <Text style={styles.headerText}>
-          Bullet {"{"}15 Minute Tournament{"}"}
-        </Text>
-        <Ionicons
-          name="information-circle-outline"
-          size={24}
-          color="#999"
-          style={styles.infoIcon}
-        />
-      </View> */}
-
-      {/* Main Content */}
       <View style={styles.content}>
         <View style={styles.leftContent}>
-          {/* Bitcoin Logo */}
           <View style={styles.x}>
-            {/* <View style={styles.bitcoinLogo}>
-              <Text style={styles.bitcoinSymbol}>₿</Text>
-            </View> */}
-            <MaterialCommunityIcons
-              name={itemIcons[data.title] || "help-circle"}
-              size={50}
-              //   color="#333"
-              style={styles.itemIcon}
+            <Image
+              source={{ uri: `${process.env.EXPO_PUBLIC_SERVER}${data.logo}` }}
+              style={{ height: 40, width: 40 }}
             />
             <Text style={styles.bitcoinText}>{data.title}</Text>
           </View>
@@ -56,19 +24,28 @@ const BitcoinPriceCard = ({ data }) => {
           </View>
         </View>
 
-        {/* Right Content */}
-        <View style={styles.rightContent}>
-          <Text style={styles.btcText}>BTC</Text>
-          {/* <Text style={styles.priceText}>$97,944.28</Text> 
-          <Text style={styles.percentageText}>0.37% (1d)</Text> */}
-        </View>
+        <TouchableOpacity
+          onPress={() => {
+            router.push({
+              pathname: "/Charts/chartss",
+              params: {
+                symbolId: data?.symbol,
+                title: data?.title,
+              },
+            });
+          }}
+          style={styles.rightContent}
+        >
+          <Text style={styles.btcText}>{data.symbolName}</Text>
+        </TouchableOpacity>
       </View>
       <View style={styles.y}>
         <View style={styles.z}></View>
-        <Text style={styles.priceText}>$97,944.28</Text>
+        <Text style={[styles.priceText, { color: priceColor }]}>
+          ${currentPrice.toFixed(2)}
+        </Text>
       </View>
 
-      {/* Badge */}
       <View style={styles.badge}>
         <Text style={styles.badgeText}>Mega Rs.44 Lakhs +</Text>
       </View>
@@ -90,24 +67,6 @@ const styles = StyleSheet.create({
     elevation: 3,
     marginTop: 15,
   },
-  header: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    marginBottom: 15,
-    borderBottomColor: "black",
-    borderBottomWidth: 1,
-    paddingHorizontal: 15,
-    paddingVertical: 5,
-  },
-  headerText: {
-    fontSize: 14,
-    color: "#333",
-  },
-  infoIcon: {
-    position: "absolute",
-    right: 0,
-    padding: 5,
-  },
   content: {
     flexDirection: "row",
     justifyContent: "space-between",
@@ -119,19 +78,6 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
   },
-  bitcoinLogo: {
-    width: 40,
-    height: 40,
-    backgroundColor: "#F7931A",
-    borderRadius: 20,
-    justifyContent: "center",
-    alignItems: "center",
-    marginRight: 10,
-  },
-  bitcoinSymbol: {
-    color: "white",
-    fontSize: 24,
-  },
   textContainer: {
     justifyContent: "center",
   },
@@ -142,11 +88,8 @@ const styles = StyleSheet.create({
   },
   x: {
     display: "flex",
-    // justifyContent: "center",
-    // alignItems: "center",
   },
   timeContainer: {
-    // flexDirection: "row",
     alignItems: "center",
   },
   startsInText: {
@@ -183,13 +126,8 @@ const styles = StyleSheet.create({
   priceText: {
     fontSize: 18,
     fontWeight: "bold",
-    // marginBottom: 4,
     marginLeft: 8,
     marginRight: 15,
-  },
-  percentageText: {
-    fontSize: 14,
-    color: "#666",
   },
   badge: {
     backgroundColor: "#FFF5E6",
@@ -197,10 +135,8 @@ const styles = StyleSheet.create({
     paddingVertical: 6,
     borderRadius: 10,
     alignSelf: "flex-start",
-    // marginTop: 5,
     marginHorizontal: 10,
     marginBottom: 10,
-    // marginTop: 5,
   },
   badgeText: {
     color: "#333",

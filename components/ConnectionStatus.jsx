@@ -1,75 +1,17 @@
-import React, { useState } from "react";
-import { View, ActivityIndicator, StatusBar, StyleSheet } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
-import { useDispatch, useSelector } from "react-redux";
-import { useRouter } from "expo-router";
-import { fetchUser } from "../../redux/slices/userSlice";
-import { useSocketConnection } from "../../hooks/useSocketConnection";
-import { useInstruments } from "../../hooks/useInstruments";
-import { Header } from "../../components/Header";
-import { ConnectionStatus } from "../../components/ConnectionStatus";
-import { GameModes } from "../../components/GameModes";
-import { InstrumentsList } from "../../components/InstrumentsList";
+import React from "react";
+import { View, Text, StyleSheet } from "react-native";
 
-const HomeContent = () => {
-  const dispatch = useDispatch();
-  const userInfo = useSelector((state) => state.user.userInfo);
-  const router = useRouter();
-  const [selectedMode, setSelectedMode] = useState("Bullet");
-
-  const { connected, socket } = useSocketConnection(
-    process.env.EXPO_PUBLIC_SERVER
-  );
-  const { instruments, loading, priceColors } = useInstruments(
-    socket,
-    process.env.EXPO_PUBLIC_SERVER
-  );
-
-  React.useEffect(() => {
-    dispatch(fetchUser());
-  }, [dispatch]);
-  const handleInstrumentPress = (item) => {
-    router.push({
-      pathname: "gamesOpen",
-      params: {
-        instrumentId: item._id,
-        competitionType: selectedMode,
-        symbol: item.symbol,
-        instrumentName: item.title,
-      },
-    });
-  };
-
-  if (loading) {
-    return (
-      <View style={[styles.container, styles.centered]}>
-        <ActivityIndicator size="large" color="#881b20" />
-      </View>
-    );
-  }
-
-  return (
-    <SafeAreaView style={styles.safeArea}>
-      <StatusBar barStyle="light-content" backgroundColor="#881b20" />
-      <View style={styles.container}>
-        <Header
-          userInfo={userInfo}
-          onProfilePress={() => router.push("profile")}
-          onWalletPress={() => router.push("/wallet")}
-        />
-        <ConnectionStatus connected={connected} />
-        <GameModes selectedMode={selectedMode} onModeSelect={setSelectedMode} />
-        <InstrumentsList
-          instruments={instruments}
-          priceColors={priceColors}
-          onInstrumentPress={handleInstrumentPress}
-        />
-      </View>
-    </SafeAreaView>
-  );
-};
-
-export default HomeContent;
+export const ConnectionStatus = ({ connected }) => (
+  <View style={styles.connectionStatus}>
+    <View
+      style={[
+        styles.statusDot,
+        { backgroundColor: connected ? "#4CAF50" : "#FF5252" },
+      ]}
+    />
+    <Text style={styles.statusText}>{connected ? "Live" : "Offline"}</Text>
+  </View>
+);
 
 const styles = StyleSheet.create({
   safeArea: {

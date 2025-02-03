@@ -175,7 +175,7 @@ const Winners = () => {
   if (loading) {
     return (
       <View style={styles.centerContainer}>
-        <ActivityIndicator size="large" color="#0000ff" />
+        <ActivityIndicator size="large" color="#881b20" />
       </View>
     );
   }

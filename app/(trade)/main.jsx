@@ -15,6 +15,7 @@ import axios from "axios";
 import { useLocalSearchParams, useNavigation } from "expo-router";
 import { useDispatch, useSelector } from "react-redux";
 import {
+  clearTradeDetails,
   //   clearTradeDetails,
   fetchTradeHistory,
   //   placeTrade as hello,
@@ -22,54 +23,56 @@ import {
 import { fetchUser } from "../../redux/slices/userSlice";
 import Trade from "../../components/Trade";
 import Position from "../../components/Position";
+import { useInstruments } from "../../hooks/useInstruments";
+import { useSocketConnection } from "../../hooks/useSocketConnection";
+import { ConnectionStatus } from "../../components/ConnectionStatus";
 
 const App = () => {
   const { contestId } = useLocalSearchParams();
   const navigation = useNavigation();
-  // const [quantity, setQuantity] = useState("1");
   const [tradeId, setTradeId] = useState(null);
   const [contestData, setContestData] = useState(null);
   const [loading, setLoading] = useState(true);
-  // const [currentPrice, setCurrentPrice] = useState(1000);
   const [activeTab, setActiveTab] = useState("trade");
-  console.log("activeTab", activeTab);
   const webViewRef = useRef(null);
   const dispatch = useDispatch();
   const trade = useSelector((state) => state.trade);
   const userInfo = useSelector((state) => state.user.userInfo);
-  const apiKey = "T2EER0G2CYSG5OOR";
-  console.log("reload");
-
-  // console.log("userInfo", userInfo);
-  // console.log("trade", trade);
-  // console.log("contestData", contestData);
 
   useEffect(() => {
     dispatch(fetchUser());
     if (tradeId) {
-      console.log("tradeId", tradeId);
-
       dispatch(fetchTradeHistory(tradeId));
     }
   }, [tradeId, contestId]);
 
-  // useEffect(() => {
-  //   const unsubscribe = navigation.addListener("beforeRemove", (e) => {
-  //     // Prevent default behavior of back button
-  //     e.preventDefault();
-
-  //     // Dispatch the clearTradeDetails action
-  //     dispatch(clearTradeDetails());
-
-  //     // Navigate back
-  //     navigation.dispatch(e.data.action);
-  //   });
-  //   return unsubscribe;
-  // }, [navigation, dispatch]);
+  useEffect(() => {
+    const unsubscribe = navigation.addListener("beforeRemove", (e) => {
+      // Prevent default behavior of back button
+      e.preventDefault();
+      dispatch(clearTradeDetails());
+      navigation.dispatch(e.data.action);
+    });
+    return unsubscribe;
+  }, [navigation, dispatch]);
 
   useEffect(() => {
     checkContestAccess();
   }, [contestId]);
+
+  const { connected, socket } = useSocketConnection(
+    process.env.EXPO_PUBLIC_SERVER
+  );
+
+  const {
+    instruments,
+    loading: sLoading,
+    priceColors,
+  } = useInstruments(
+    socket,
+    process.env.EXPO_PUBLIC_SERVER,
+    contestData?.instrument?._id
+  );
 
   const checkContestAccess = async () => {
     try {
@@ -88,7 +91,7 @@ const App = () => {
         (p) => p.user === userInfo?._id
       );
 
-      console.log("isParticipant", isParticipant.tradeId);
+      // console.log("isParticipant", isParticipant.tradeId);
 
       if (!isParticipant.tradeId) {
         Alert.alert(
@@ -286,6 +289,7 @@ const App = () => {
 
   return (
     <View style={styles.container}>
+      <ConnectionStatus connected={connected} />
       <View style={styles.tabContainer}>
         <TabButton
           title="Trade"
@@ -299,9 +303,19 @@ const App = () => {
         />
       </View>
       {activeTab === "trade" ? (
-        <Trade contestData={contestData} />
+        <Trade
+          contestData={contestData}
+          instruments={instruments}
+          loading={sLoading}
+          color={priceColors}
+        />
       ) : (
-        <Position tradeId={tradeId} />
+        <Position
+          tradeId={tradeId}
+          instruments={instruments}
+          loading={sLoading}
+          color={priceColors}
+        />
       )}
     </View>
   );

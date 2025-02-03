@@ -165,7 +165,7 @@ const CryptoNewsFeed = () => {
   if (loading && !refreshing) {
     return (
       <View style={styles.centerContainer}>
-        <ActivityIndicator size="large" color="#007AFF" />
+        <ActivityIndicator size="large" color="#881b20" />
       </View>
     );
   }

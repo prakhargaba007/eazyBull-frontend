@@ -1,15 +1,13 @@
-import React, { useState, useEffect, useRef, useLayoutEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   StyleSheet,
   View,
   Text,
   TouchableOpacity,
-  TextInput,
   Alert,
   ActivityIndicator,
   Platform,
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
 import { WebView } from "react-native-webview";
 import axios from "axios";
 import { useLocalSearchParams, useNavigation } from "expo-router";
@@ -22,13 +20,13 @@ import {
 import TradeOrderModal from "./TradeOrderModal";
 // import { fetchUser } from "../../redux/slices/userSlice";
 
-const Trade = ({ contestData }) => {
+const Trade = ({ contestData, instruments, color }) => {
   const { contestId } = useLocalSearchParams();
   const navigation = useNavigation();
   const [quantity, setQuantity] = useState("1");
   const [tradeId, setTradeId] = useState(null);
   const [loading, setLoading] = useState(false);
-  const [currentPrice, setCurrentPrice] = useState(1000);
+  // const [currentPrice, setCurrentPrice] = useState(null);
   const [activeTab, setActiveTab] = useState("trade");
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [tradeType, setTradeType] = useState("buy");
@@ -38,83 +36,28 @@ const Trade = ({ contestData }) => {
   const dispatch = useDispatch();
   const trade = useSelector((state) => state.trade);
   const userInfo = useSelector((state) => state.user.userInfo);
-  const apiKey = "T2EER0G2CYSG5OOR";
-  // console.log("userInfo", userInfo);
-  // console.log("trade", trade);
-  // console.log("contestData", contestData);
-
-  useEffect(
-    () => {
-      // dispatch(fetchUser());
-      if (tradeId) {
-        console.log("tradeId", tradeId);
-
-        dispatch(fetchTradeHistory(tradeId));
-      }
-    },
-    [
-      // tradeId, contestId
-    ]
-  );
-
-  // useEffect(() => {
-  //   const unsubscribe = navigation.addListener("beforeRemove", (e) => {
-  //     // Prevent default behavior of back button
-  //     e.preventDefault();
-
-  //     // Dispatch the clearTradeDetails action
-  //     dispatch(clearTradeDetails());
-
-  //     // Navigate back
-  //     navigation.dispatch(e.data.action);
-  //   });
-  //   return unsubscribe;
-  // }, [navigation, dispatch]);
+  const currentPrice = Number(instruments?.price);
 
   // useEffect(() => {
   //   checkContestAccess();
   // }, [contestId]);
+  useEffect(() => {
+    const fetchPrice = async () => {
+      if (contestData?.instrument) {
+        try {
+          // const price = await getCurrentPrice(
+          //   contestData.instrument.symbolName,
+          //   contestData.instrument.type
+          // );
+          // setCurrentPrice(parseFloat(price));
+        } catch (error) {
+          console.error("Failed to fetch current price", error);
+        }
+      }
+    };
 
-  // const checkContestAccess = async () => {
-  //   try {
-  //     const response = await axios.get(
-  //       `${process.env.EXPO_PUBLIC_SERVER}/contests/${contestId}`
-  //     );
-
-  //     if (response.status != 200) {
-  //       throw new Error(response.message | "Error fetching");
-  //     }
-
-  //     const contest = response.data;
-
-  //     // Check if user is a participant
-  //     const isParticipant = contest.participants.find(
-  //       (p) => p.user === userInfo?._id
-  //     );
-
-  //     console.log("isParticipant", isParticipant.tradeId);
-
-  //     if (!isParticipant.tradeId) {
-  //       Alert.alert(
-  //         "Access Denied",
-  //         "You are not a participant in this contest"
-  //       );
-  //       navigation.navigate("Home");
-  //       return;
-  //     }
-
-  //     setTradeId(isParticipant.tradeId);
-
-  //     // Store contest data
-  //     setContestData(contest);
-  //     setLoading(false);
-  //   } catch (error) {
-  //     console.log(error);
-
-  //     Alert.alert("Error", "Failed to load contest data");
-  //     // navigation.navigate("Home");
-  //   }
-  // };
+    fetchPrice();
+  }, [contestData]);
 
   const tradingViewHtml = `
     <!DOCTYPE html>
@@ -175,44 +118,44 @@ const Trade = ({ contestData }) => {
     }
   };
 
-  const getCurrentPrice = async (symbol, market) => {
-    let url;
+  // const getCurrentPrice = async (symbol, market) => {
+  //   let url;
 
-    if (market === "Indices") {
-      url = `https://www.alphavantage.co/query?function=TIME_SERIES_INTRADAY&symbol=${symbol}&interval=1min&apikey=${apiKey}`;
-    } else if (market === "cryptocurrency") {
-      url = `https://www.alphavantage.co/query?function=CURRENCY_EXCHANGE_RATE&from_currency=${symbol}&to_currency=USD&apikey=${apiKey}`;
-    } else if (market === "Forex") {
-      const [fromCurrency, toCurrency] = symbol.split("/");
-      url = `https://www.alphavantage.co/query?function=CURRENCY_EXCHANGE_RATE&from_currency=${fromCurrency}&to_currency=${toCurrency}&apikey=${apiKey}`;
-    } else {
-      Alert.alert("Error", "Invalid market type");
-      return;
-    }
-    console.log("url", url);
+  //   if (market === "Indices") {
+  //     url = `https://www.alphavantage.co/query?function=TIME_SERIES_INTRADAY&symbol=${symbol}&interval=1min&apikey=${apiKey}`;
+  //   } else if (market === "cryptocurrency") {
+  //     url = `https://www.alphavantage.co/query?function=CURRENCY_EXCHANGE_RATE&from_currency=${symbol}&to_currency=USD&apikey=${apiKey}`;
+  //   } else if (market === "Forex") {
+  //     const [fromCurrency, toCurrency] = symbol.split("/");
+  //     url = `https://www.alphavantage.co/query?function=CURRENCY_EXCHANGE_RATE&from_currency=${fromCurrency}&to_currency=${toCurrency}&apikey=${apiKey}`;
+  //   } else {
+  //     Alert.alert("Error", "Invalid market type");
+  //     return;
+  //   }
+  //   // console.log("url", url);
 
-    setLoading(true);
-    try {
-      const response = await axios.get(url);
-      const data = response.data;
-      console.log("price", data);
+  //   setLoading(true);
+  //   try {
+  //     const response = await axios.get(url);
+  //     const data = response.data;
+  //     // console.log("price", data);
 
-      if (market === "stock") {
-        const timeSeries = data["Time Series (1min)"];
-        const latestTimestamp = Object.keys(timeSeries)[0];
-        return timeSeries[latestTimestamp]["4. close"];
-      } else {
-        return data["Realtime Currency Exchange Rate"]["5. Exchange Rate"];
-      }
-    } catch (error) {
-      Alert.alert("Error", "Failed to fetch data");
-      console.error(error);
-    } finally {
-      setLoading(false);
-    }
-  };
+  //     if (market === "stock") {
+  //       const timeSeries = data["Time Series (1min)"];
+  //       const latestTimestamp = Object.keys(timeSeries)[0];
+  //       return timeSeries[latestTimestamp]["4. close"];
+  //     } else {
+  //       return data["Realtime Currency Exchange Rate"]["5. Exchange Rate"];
+  //     }
+  //   } catch (error) {
+  //     Alert.alert("Error", "Failed to fetch data");
+  //     console.error(error);
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // };
 
-  const placeTrade = async (tradeType) => {
+  const placeTrade = async (orderDetails) => {
     try {
       setLoading(true);
       if (!contestData) {
@@ -229,41 +172,37 @@ const Trade = ({ contestData }) => {
         return;
       }
 
-      let currentPrice = await getCurrentPrice(
-        contestData.instrument.symbolName,
-        contestData.instrument.type
-      );
-      console.log(
-        "currentPrice",
-        currentPrice,
-        typeof parseFloat(currentPrice)
-      );
+      // Fetch current price if not already set
+      // let price = currentPrice;
+      // if (!price) {
+      //   price = await getCurrentPrice(
+      //     contestData.instrument.symbolName,
+      //     contestData.instrument.type
+      //   );
+      // }
 
       const tradeData = {
         tradeId: participant.tradeId,
         contestId,
-        tradeType,
-        quantity: parseFloat(quantity),
+        tradeType: orderDetails.type,
+        quantity: parseFloat(orderDetails.quantity),
         price: currentPrice,
+        orderType: orderDetails.orderType,
+        target: orderDetails.target.price,
+        stopLoss: orderDetails.stopLoss.price,
       };
 
-      // dispatch(hello(tradeData)).unwrap;
       const res = await dispatch(hello(tradeData)).unwrap();
-      // console.log("Trade placed successfully:", res);
-      // const res = await dispatch(placeTrade(tradeData)).unwrap();
+      // console.log("res", res);
 
-      // const response = await axios.post(
-      //   `${process.env.EXPO_PUBLIC_SERVER}/trades/place`,
-      //   tradeData
-      // );
       if (res.status !== 201) {
         Alert.alert("Error", "Failed to place trade");
         return;
       }
-      Alert.alert("Success", `${tradeType} order placed successfully`);
+      Alert.alert("Success", `${orderDetails.type} order placed successfully`);
+      setIsModalVisible(false);
     } catch (error) {
       console.log("error", error);
-
       Alert.alert(
         "Error",
         error.response?.data?.error || "Failed to place trade"
@@ -278,12 +217,7 @@ const Trade = ({ contestData }) => {
       <TradeOrderModal
         visible={isModalVisible}
         onClose={() => setIsModalVisible(false)}
-        onSubmit={(orderDetails) => {
-          console.log(orderDetails);
-          // Call your placeTrade function here with the order details
-          placeTrade(orderDetails.type);
-          setIsModalVisible(false);
-        }}
+        onSubmit={placeTrade}
         type={tradeType}
         currentPrice={currentPrice}
         initialQuantity="1"
@@ -342,7 +276,7 @@ const Trade = ({ contestData }) => {
           disabled={loading}
         >
           {loading ? (
-            <ActivityIndicator />
+            <ActivityIndicator color={"#881b20"} />
           ) : (
             <Text style={styles.orderButtonText}>BUY</Text>
           )}

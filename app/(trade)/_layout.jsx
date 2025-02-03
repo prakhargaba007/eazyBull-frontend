@@ -10,7 +10,7 @@ import { clearTradeDetails } from "../../redux/slices/tradeSlice";
 const AuthLayout = () => {
   const dispatch = useDispatch();
   const userInfo = useSelector((state) => state.user.userInfo);
-  const tradeBal = useSelector((state) => state.trade.totalBalance);
+  const profitLoss = useSelector((state) => state.trade.profitLoss);
   const tradeId = useSelector((state) => state.trade.tradeHistory);
   const t1 = useSelector((state) => state.trade.end);
 
@@ -69,19 +69,42 @@ const AuthLayout = () => {
 
   function MainHeader() {
     return (
-      <View style={{ flexDirection: "row", gap: 85 }}>
-        <View style={{ justifyContent: "center", alignItems: "center" }}>
-          <Text style={{ color: "#fff" }}>Ends in</Text>
-          <Text style={{ color: "#fff" }}>{t2}</Text>
+      <View
+        style={{
+          flexDirection: "row",
+          alignItems: "center",
+          justifyContent: "space-between",
+          width: "90%",
+        }}
+      >
+        <Image
+          source={require("../../assets/images/easybull-high-resolution-logo-transparent.png")}
+          style={{
+            width: 40,
+            height: 40,
+            resizeMode: "contain",
+          }}
+        />
+        <View
+          style={{
+            position: "absolute",
+            width: "100%",
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
+          <View style={{ alignItems: "center" }}>
+            <Text style={{ color: "#fff" }}>Ends in</Text>
+            <Text style={{ color: "#fff" }}>{t2}</Text>
+          </View>
         </View>
         <View style={{ justifyContent: "center", alignItems: "center" }}>
           <Text style={{ color: "#fff" }}>P/L</Text>
-          <Text style={{ color: "#fff" }}>-25,485</Text>
+          <Text style={{ color: "#fff" }}>{profitLoss.toFixed(2)}</Text>
         </View>
       </View>
     );
   }
-
   return (
     <>
       <Stack
@@ -99,16 +122,25 @@ const AuthLayout = () => {
           name="main"
           options={({ route }) => ({
             headerTitle: () => (
-              <Image
-                source={require("../../assets/images/easybull-high-resolution-logo-transparent.png")}
-                style={{
-                  marginTop: 5,
-                  width: 40,
-                  height: 40,
-                  resizeMode: "contain",
-                  marginLeft: -20,
-                }}
-              />
+              <>
+                {/* <Image
+                  source={require("../../assets/images/easybull-high-resolution-logo-transparent.png")}
+                  style={{
+                    marginTop: 5,
+                    width: 40,
+                    height: 40,
+                    resizeMode: "contain",
+                    marginLeft: -20,
+                  }}
+                /> */}
+                <Text
+                  style={{
+                    marginTop: 5,
+                    resizeMode: "contain",
+                    marginLeft: -50,
+                  }}
+                ></Text>
+              </>
             ),
             headerRight: () => <MainHeader />,
             headerTitleAlign: "left",

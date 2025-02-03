@@ -9,6 +9,11 @@ import {
 } from "react-native";
 import { MaterialIcons, FontAwesome5, Feather } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { clearTradeDetails } from "../../redux/slices/tradeSlice";
+import { clearUserDetails } from "../../redux/slices/userSlice";
+import { useDispatch } from "react-redux";
+import { router } from "expo-router";
 
 const SettingsRow = ({
   icon: IconComponent,
@@ -103,6 +108,7 @@ const GenderOption = ({ gender, selectedGender, onSelect }) => (
 
 const Info = ({ isEditable = true, initialData = null }) => {
   const navigation = useNavigation();
+  const dispatch = useDispatch();
   const [selectedGender, setSelectedGender] = useState(
     initialData?.gender || null
   );
@@ -130,6 +136,17 @@ const Info = ({ isEditable = true, initialData = null }) => {
 
   const navigateToEdit = (field) => {
     navigation.navigate("EditField", { field, currentValue: userData[field] });
+  };
+
+  const handleLogout = async () => {
+    try {
+      dispatch(clearUserDetails());
+      dispatch(clearTradeDetails());
+      await AsyncStorage.removeItem("token");
+      router.replace("/");
+    } catch (error) {
+      console.error("Error during logout:", error);
+    }
   };
 
   return (
@@ -200,7 +217,7 @@ const Info = ({ isEditable = true, initialData = null }) => {
           icon={MaterialIcons}
           iconName="logout"
           text="Logout"
-          onPress={() => {}}
+          onPress={handleLogout}
         />
       </View>
 

@@ -318,7 +318,7 @@ const TradeOrderModal = ({
                   orderType,
                   quantity,
                   price: orderType === "market" ? currentPrice : price,
-                  takeProfit: takeProfitEnabled
+                  target: takeProfitEnabled
                     ? {
                         price: takeProfitPrice,
                         usd: takeProfitUSD,

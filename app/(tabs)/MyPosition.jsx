@@ -111,7 +111,7 @@ const MyPosition = () => {
 
       {loading && !refreshing ? (
         <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color="#fc4100" />
+          <ActivityIndicator size="large" color="#881b20" />
         </View>
       ) : (
         <FlatList

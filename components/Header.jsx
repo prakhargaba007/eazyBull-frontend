@@ -1,75 +1,26 @@
-import React, { useState } from "react";
-import { View, ActivityIndicator, StatusBar, StyleSheet } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
-import { useDispatch, useSelector } from "react-redux";
-import { useRouter } from "expo-router";
-import { fetchUser } from "../../redux/slices/userSlice";
-import { useSocketConnection } from "../../hooks/useSocketConnection";
-import { useInstruments } from "../../hooks/useInstruments";
-import { Header } from "../../components/Header";
-import { ConnectionStatus } from "../../components/ConnectionStatus";
-import { GameModes } from "../../components/GameModes";
-import { InstrumentsList } from "../../components/InstrumentsList";
+import React from "react";
+import { View, TouchableOpacity, StyleSheet } from "react-native";
+import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
+import Ionicons from "@expo/vector-icons/Ionicons";
+import Wallet from "./Wallet";
 
-const HomeContent = () => {
-  const dispatch = useDispatch();
-  const userInfo = useSelector((state) => state.user.userInfo);
-  const router = useRouter();
-  const [selectedMode, setSelectedMode] = useState("Bullet");
-
-  const { connected, socket } = useSocketConnection(
-    process.env.EXPO_PUBLIC_SERVER
-  );
-  const { instruments, loading, priceColors } = useInstruments(
-    socket,
-    process.env.EXPO_PUBLIC_SERVER
-  );
-
-  React.useEffect(() => {
-    dispatch(fetchUser());
-  }, [dispatch]);
-  const handleInstrumentPress = (item) => {
-    router.push({
-      pathname: "gamesOpen",
-      params: {
-        instrumentId: item._id,
-        competitionType: selectedMode,
-        symbol: item.symbol,
-        instrumentName: item.title,
-      },
-    });
-  };
-
-  if (loading) {
-    return (
-      <View style={[styles.container, styles.centered]}>
-        <ActivityIndicator size="large" color="#881b20" />
-      </View>
-    );
-  }
-
-  return (
-    <SafeAreaView style={styles.safeArea}>
-      <StatusBar barStyle="light-content" backgroundColor="#881b20" />
-      <View style={styles.container}>
-        <Header
-          userInfo={userInfo}
-          onProfilePress={() => router.push("profile")}
-          onWalletPress={() => router.push("/wallet")}
-        />
-        <ConnectionStatus connected={connected} />
-        <GameModes selectedMode={selectedMode} onModeSelect={setSelectedMode} />
-        <InstrumentsList
-          instruments={instruments}
-          priceColors={priceColors}
-          onInstrumentPress={handleInstrumentPress}
-        />
-      </View>
-    </SafeAreaView>
-  );
-};
-
-export default HomeContent;
+export const Header = ({ userInfo, onProfilePress, onWalletPress }) => (
+  <View style={styles.header}>
+    <TouchableOpacity
+      style={styles.profileButton}
+      activeOpacity={0.7}
+      onPress={onProfilePress}
+    >
+      <MaterialCommunityIcons name="face-man-profile" size={30} color="white" />
+    </TouchableOpacity>
+    <View style={styles.rightSection}>
+      <TouchableOpacity style={styles.iconButton}>
+        <Ionicons name="notifications" size={24} color="white" />
+      </TouchableOpacity>
+      <Wallet money={userInfo?.money} onPress={onWalletPress} />
+    </View>
+  </View>
+);
 
 const styles = StyleSheet.create({
   safeArea: {

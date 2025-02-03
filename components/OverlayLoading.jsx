@@ -16,7 +16,7 @@ export default function OverlayLoading({ loading }) {
     <View style={styles.container}>
       {loading && (
         <View style={styles.overlay}>
-          <ActivityIndicator size="large" color="#fff" />
+          <ActivityIndicator size="large" color="#881b20" />
         </View>
       )}
     </View>

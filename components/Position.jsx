@@ -3,20 +3,22 @@ import {
   StyleSheet,
   View,
   Text,
-  FlatList,
+  SectionList,
   ActivityIndicator,
   TouchableOpacity,
   Alert,
 } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import moment from "moment";
 import { MaterialIcons } from "@expo/vector-icons";
-import { LinearGradient } from "expo-linear-gradient";
+import axios from "axios";
 
-const Position = ({ tradeId }) => {
+const Position = ({ tradeId, onTradeUpdated, instruments, loading, color }) => {
   const [trade, setTrade] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [exitLoading, setExitLoading] = useState({});
+  const currentPrice = Number(instruments.price);
+  // console.log("instruments", currentPrice);
 
   useEffect(() => {
     getTrade();
@@ -53,16 +55,153 @@ const Position = ({ tradeId }) => {
     }
   }
 
+  async function exitPosition(positionId) {
+    console.log("positionId", positionId);
+    console.log("currentPrice", currentPrice);
+
+    setExitLoading((prev) => ({ ...prev, [positionId]: true }));
+    try {
+      const token = await AsyncStorage.getItem("token");
+      if (!token || !tradeId) {
+        throw new Error("No token or tradeId found");
+      }
+
+      const position = trade.position.find((p) => p._id === positionId);
+      // const currentPrice = await getCurrentMarketPrice(position.tradeType);
+      console.log("currentPrice", currentPrice);
+
+      const { data } = await axios.put(
+        `${process.env.EXPO_PUBLIC_SERVER}/trades/close`,
+        {
+          positionId,
+          tradeId,
+          contestId: trade.contest._id,
+          exitPrice: currentPrice,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      setTrade((prevTrade) => ({
+        ...prevTrade,
+        position: prevTrade.position.map((pos) =>
+          pos._id === positionId
+            ? { ...pos, isOpen: false, closedPrice: currentPrice }
+            : pos
+        ),
+        totalBalance: data.trade.totalBalance,
+        profitLoss: data.trade.profitLoss,
+      }));
+
+      if (onTradeUpdated) {
+        onTradeUpdated(data.trade);
+      }
+
+      Alert.alert("Success", "Position closed successfully");
+    } catch (error) {
+      console.error("Error exiting position:", error);
+      Alert.alert(
+        "Error",
+        error.response?.data?.error || "Failed to close position"
+      );
+    } finally {
+      setExitLoading((prev) => ({ ...prev, [positionId]: false }));
+    }
+  }
+
+  async function getCurrentMarketPrice(tradeType) {
+    // Placeholder for market price API
+    return tradeType === "buy" ? currentPrice : currentPrice;
+  }
+
   function handleRefresh() {
     setIsRefreshing(true);
     getTrade().finally(() => setIsRefreshing(false));
   }
 
+  const renderPositionItem = ({ item }) => {
+    const isExitLoading = exitLoading[item._id];
+    const profitLoss =
+      (item.tradeType === "buy"
+        ? currentPrice - item.openPrice
+        : item.openPrice - currentPrice) * item.quantity;
+
+    const priceColor =
+      item.tradeType === "buy"
+        ? profitLoss >= 0
+          ? "#19db00"
+          : "#ef4444"
+        : profitLoss >= 0
+          ? "#19db00"
+          : "#ef4444";
+    return (
+      <View style={styles.tradeItem}>
+        <View style={styles.tradeHeader}>
+          <View style={styles.symbolContainer}>
+            <View style={styles.x}>
+              <Text style={styles.symbolText}>BTCUSD</Text>
+              <Text
+                style={[
+                  styles.tradeType,
+                  item.tradeType === "buy" ? styles.buyText : styles.sellText,
+                ]}
+              >
+                {item.tradeType.toUpperCase()} {item.quantity.toFixed(2)}
+              </Text>
+            </View>
+            <View style={styles.tradeDetails}>
+              <Text style={styles.priceRange}>
+                Entry: {item.openPrice.toFixed(2)}
+                {!item.isOpen && ` | Exit: ${item.closedPrice.toFixed(2)}`}
+              </Text>
+              <View style={styles.targetStopContainer}>
+                <Text style={styles.targetStopText}>
+                  Target: {item.target ? item.target.toFixed(2) : "N/A"}
+                </Text>
+                <Text style={styles.targetStopText}>
+                  Stop Loss: {item.stopLoss ? item.stopLoss.toFixed(2) : "N/A"}
+                </Text>
+              </View>
+            </View>
+          </View>
+          <View style={styles.quantityContainer}>
+            <Text style={[styles.quantityText, { color: priceColor }]}>
+              {
+                item.isOpen
+                  ? profitLoss.toFixed(2) // Show current P/L for open positions
+                  : (
+                      (item.closedPrice - item.openPrice) *
+                      item.quantity
+                    ).toFixed(2) // Show final P/L for closed positions
+              }
+            </Text>
+            {item.isOpen && (
+              <TouchableOpacity
+                style={styles.closeButton}
+                onPress={() => exitPosition(item._id)}
+                disabled={isExitLoading}
+              >
+                {isExitLoading ? (
+                  <ActivityIndicator size="small" color="#881b20" />
+                ) : (
+                  <MaterialIcons name="close" size={16} color="#881b20" />
+                )}
+              </TouchableOpacity>
+            )}
+          </View>
+        </View>
+      </View>
+    );
+  };
+
   if (!trade) {
     return (
       <View style={styles.container}>
         {isLoading ? (
-          <ActivityIndicator size="large" color="#0066cc" />
+          <ActivityIndicator size="large" color="#881b20" />
         ) : (
           <Text style={styles.noDataText}>No trade data available</Text>
         )}
@@ -70,12 +209,33 @@ const Position = ({ tradeId }) => {
     );
   }
 
+  const sections = [
+    {
+      title: "Open Positions",
+      data: trade.position.filter((p) => p.isOpen),
+    },
+    {
+      title: "Closed Positions",
+      data: trade.position.filter((p) => !p.isOpen),
+    },
+  ];
+
+  let unrealisd = trade.position
+    .filter((p) => p.isOpen)
+    .reduce((total, position) => {
+      const pnl =
+        position.tradeType === "buy"
+          ? (currentPrice - position.openPrice) * position.quantity
+          : (position.openPrice - currentPrice) * position.quantity;
+      return total + pnl;
+    }, 0);
+
   return (
     <View style={styles.container}>
       <View style={styles.summaryContainer}>
         <View style={styles.fundsRow}>
           <Text style={styles.fundsText}>
-            Total Funds -
+            Total Funds:{" "}
             <Text style={{ fontWeight: 500, color: "#000" }}>
               ${trade.totalBalance.toFixed(2)}
             </Text>
@@ -83,80 +243,67 @@ const Position = ({ tradeId }) => {
           <Text style={styles.fundsText}>
             Funds used -{" "}
             <Text style={{ fontWeight: 500, color: "#000" }}>
-              ${(trade.totalBalance - trade.remainingBalance).toFixed(2)}
+              ${(trade.contest.balanceGiven - trade.totalBalance).toFixed(2)}
             </Text>
           </Text>
         </View>
 
         <Text style={styles.totalPnlText}>
           Total P&L{" "}
-          <Text style={{ fontWeight: 700, color: "#000" }}>
-            ${trade.profitLoss.toFixed(2)}
+          <Text
+            style={{
+              fontWeight: 700,
+              color: trade.profitLoss + unrealisd > 0 ? "#19db00" : "#ef4444",
+            }}
+          >
+            ${(trade.profitLoss + unrealisd).toFixed(2)}
           </Text>
         </Text>
         <View style={styles.pnlCards}>
           <View style={styles.pnlCard}>
             <Text style={styles.pnlLabel}>Realized P&L</Text>
-            <Text style={styles.pnlValue}>
-              $ {(trade.realizedPnL || 0).toFixed(2)}
+            <Text
+              style={[
+                styles.pnlValue,
+                { color: trade.profitLoss > 0 ? "#19db00" : "#ef4444" },
+              ]}
+            >
+              $ {(trade.profitLoss || 0).toFixed(2)}
             </Text>
           </View>
 
-          {/* Vertical divider */}
           <View style={styles.divider} />
 
           <View style={styles.pnlCard}>
             <Text style={styles.pnlLabel}>Unrealized P&L</Text>
-            <Text style={styles.pnlValue}>
-              $ {(trade.unrealizedPnL || 0).toFixed(2)}
+            <Text
+              style={[
+                styles.pnlValue,
+                { color: unrealisd > 0 ? "#19db00" : "#ef4444" },
+              ]}
+            >
+              $ {(unrealisd || 0).toFixed(2)}
             </Text>
           </View>
         </View>
       </View>
 
-      <FlatList
-        data={trade.position}
-        refreshing={isRefreshing}
-        onRefresh={handleRefresh}
+      <SectionList
+        sections={sections}
         keyExtractor={(item) => item._id}
-        contentContainerStyle={styles.listContainer}
-        renderItem={({ item }) => (
-          <View style={styles.tradeItem}>
-            <View style={styles.tradeHeader}>
-              <View style={styles.symbolContainer}>
-                <View style={styles.x}>
-                  <Text style={styles.symbolText}>BTCUSD</Text>
-                  <Text
-                    style={[
-                      styles.tradeType,
-                      item.tradeType === "BUY"
-                        ? styles.buyText
-                        : styles.sellText,
-                    ]}
-                  >
-                    {item.tradeType} {item.quantity.toFixed(2)}
-                  </Text>
-                </View>
-                <Text style={styles.priceRange}>
-                  {item.openPrice.toFixed(2)} → {item.openPrice.toFixed(2)}
-                </Text>
-              </View>
-              <View style={styles.quantityContainer}>
-                <Text style={styles.quantityText}>
-                  {item.openPrice.toFixed(2)}
-                </Text>
-                <TouchableOpacity
-                  style={styles.closeButton}
-                  onPress={() => {
-                    /* Handle close */
-                  }}
-                >
-                  <MaterialIcons name="close" size={16} color="#881b20" />
-                </TouchableOpacity>
-              </View>
-            </View>
+        renderSectionHeader={({ section: { title } }) => (
+          <View style={styles.sectionHeader}>
+            <Text style={styles.sectionHeaderText}>{title}</Text>
           </View>
         )}
+        renderItem={renderPositionItem}
+        refreshing={isRefreshing}
+        onRefresh={handleRefresh}
+        ListEmptyComponent={
+          <View style={styles.noPositionsContainer}>
+            <Text style={styles.noPositionsText}>No positions found</Text>
+          </View>
+        }
       />
     </View>
   );
@@ -170,7 +317,7 @@ const styles = StyleSheet.create({
   summaryContainer: {
     backgroundColor: "#F4EAEB",
     padding: 16,
-    marginBottom: 76,
+    marginBottom: 60,
     height: "23%",
   },
   x: {
@@ -297,6 +444,39 @@ const styles = StyleSheet.create({
     color: "#666",
     textAlign: "center",
     marginTop: 24,
+  },
+  noPositionsContainer: {
+    alignItems: "center",
+    justifyContent: "center",
+    padding: 20,
+  },
+  noPositionsText: {
+    fontSize: 16,
+    color: "#666",
+  },
+  sectionHeader: {
+    backgroundColor: "#f5f5f5",
+    paddingVertical: 10,
+    paddingHorizontal: 15,
+  },
+  sectionHeaderText: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: "#333",
+  },
+  tradeDetails: {
+    marginTop: 5,
+  },
+  targetStopContainer: {
+    flexDirection: "row",
+    // justifyContent: "space-between",
+    marginTop: 5,
+  },
+  targetStopText: {
+    fontSize: 12,
+    color: "#666",
+    marginRight: 25,
+    minWidth: 100,
   },
 });
 

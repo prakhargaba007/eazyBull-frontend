@@ -1,75 +1,44 @@
-import React, { useState } from "react";
-import { View, ActivityIndicator, StatusBar, StyleSheet } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
-import { useDispatch, useSelector } from "react-redux";
-import { useRouter } from "expo-router";
-import { fetchUser } from "../../redux/slices/userSlice";
-import { useSocketConnection } from "../../hooks/useSocketConnection";
-import { useInstruments } from "../../hooks/useInstruments";
-import { Header } from "../../components/Header";
-import { ConnectionStatus } from "../../components/ConnectionStatus";
-import { GameModes } from "../../components/GameModes";
-import { InstrumentsList } from "../../components/InstrumentsList";
+import React from "react";
+import { View, TouchableOpacity, Text, StyleSheet } from "react-native";
+import FontAwesome5 from "@expo/vector-icons/FontAwesome5";
 
-const HomeContent = () => {
-  const dispatch = useDispatch();
-  const userInfo = useSelector((state) => state.user.userInfo);
-  const router = useRouter();
-  const [selectedMode, setSelectedMode] = useState("Bullet");
+const GameModeButton = ({ mode, icon, selected, onPress }) => (
+  <TouchableOpacity
+    style={[styles.gameModeButton, selected && styles.selectedGameMode]}
+    onPress={onPress}
+    activeOpacity={0.7}
+  >
+    <FontAwesome5 name={icon} size={18} color={selected ? "#881b20" : "#333"} />
+    <Text
+      style={[styles.gameModeText, selected && styles.selectedGameModeText]}
+    >
+      {mode}
+    </Text>
+  </TouchableOpacity>
+);
 
-  const { connected, socket } = useSocketConnection(
-    process.env.EXPO_PUBLIC_SERVER
-  );
-  const { instruments, loading, priceColors } = useInstruments(
-    socket,
-    process.env.EXPO_PUBLIC_SERVER
-  );
-
-  React.useEffect(() => {
-    dispatch(fetchUser());
-  }, [dispatch]);
-  const handleInstrumentPress = (item) => {
-    router.push({
-      pathname: "gamesOpen",
-      params: {
-        instrumentId: item._id,
-        competitionType: selectedMode,
-        symbol: item.symbol,
-        instrumentName: item.title,
-      },
-    });
-  };
-
-  if (loading) {
-    return (
-      <View style={[styles.container, styles.centered]}>
-        <ActivityIndicator size="large" color="#881b20" />
-      </View>
-    );
-  }
-
-  return (
-    <SafeAreaView style={styles.safeArea}>
-      <StatusBar barStyle="light-content" backgroundColor="#881b20" />
-      <View style={styles.container}>
-        <Header
-          userInfo={userInfo}
-          onProfilePress={() => router.push("profile")}
-          onWalletPress={() => router.push("/wallet")}
-        />
-        <ConnectionStatus connected={connected} />
-        <GameModes selectedMode={selectedMode} onModeSelect={setSelectedMode} />
-        <InstrumentsList
-          instruments={instruments}
-          priceColors={priceColors}
-          onInstrumentPress={handleInstrumentPress}
-        />
-      </View>
-    </SafeAreaView>
-  );
-};
-
-export default HomeContent;
+export const GameModes = ({ selectedMode, onModeSelect }) => (
+  <View style={styles.gameModeContainer}>
+    <GameModeButton
+      mode="Bullet"
+      icon="bolt"
+      selected={selectedMode === "Bullet"}
+      onPress={() => onModeSelect("Bullet")}
+    />
+    <GameModeButton
+      mode="Rapid"
+      icon="tachometer-alt"
+      selected={selectedMode === "Rapid"}
+      onPress={() => onModeSelect("Rapid")}
+    />
+    <GameModeButton
+      mode="Classic"
+      icon="chess"
+      selected={selectedMode === "Classic"}
+      onPress={() => onModeSelect("Classic")}
+    />
+  </View>
+);
 
 const styles = StyleSheet.create({
   safeArea: {

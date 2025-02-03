@@ -111,7 +111,7 @@ const TransactionHistory = () => {
   if (loading) {
     return (
       <View style={styles.centerContainer}>
-        <ActivityIndicator size="large" color="#0066cc" />
+        <ActivityIndicator size="large" color="#881b20" />
       </View>
     );
   }

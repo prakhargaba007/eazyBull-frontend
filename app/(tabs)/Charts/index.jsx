@@ -6,9 +6,11 @@ import {
   FlatList,
   ActivityIndicator,
   TouchableOpacity,
+  Image,
 } from "react-native";
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 import { router } from "expo-router";
+import CryptoNewsFeed from "../../../components/News";
 
 const itemIcons = {
   Bitcoin: "bitcoin",
@@ -33,10 +35,9 @@ const WatchlistItem = ({ item }) => {
     <View style={styles.itemContainer}>
       <View style={styles.leftContent}>
         <View style={styles.iconContainer}>
-          <MaterialCommunityIcons
-            name={itemIcons[item.title] || "chart-line"}
-            size={24}
-            color="#666"
+          <Image
+            source={{ uri: `${process.env.EXPO_PUBLIC_SERVER}${item.logo}` }}
+            style={{ height: 40, width: 40 }}
           />
         </View>
         <View style={styles.nameContainer}>
@@ -87,7 +88,7 @@ const Watchlist = () => {
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#0000ff" />
+        <ActivityIndicator size="large" color="#881b20" />
       </View>
     );
   }
@@ -98,8 +99,6 @@ const Watchlist = () => {
       <FlatList
         data={instruments}
         renderItem={({ item }) => {
-          // console.log("item", item);
-
           return (
             <>
               <TouchableOpacity
@@ -121,6 +120,23 @@ const Watchlist = () => {
         keyExtractor={(item) => item.symbol}
         showsVerticalScrollIndicator={false}
         ItemSeparatorComponent={() => <View style={styles.separator} />}
+        ListFooterComponent={
+          <View
+          // style={{ marginTop: 15 }}
+          >
+            <View
+              style={{
+                backgroundColor: "#881b20",
+                width: "100%",
+                height: 5,
+                borderRadius: 5,
+                marginVertical: 10,
+                marginBottom: 20,
+              }}
+            />
+            <CryptoNewsFeed />
+          </View>
+        }
       />
     </View>
   );

@@ -8,7 +8,7 @@ const AuthLayout = () => {
       <Stack
         screenOptions={{
           headerStyle: {
-            backgroundColor: "#fc4100",
+            backgroundColor: "#881b20",
           },
           headerTintColor: "#fff",
           headerTitleStyle: {
@@ -44,7 +44,7 @@ const AuthLayout = () => {
           }}
         />
       </Stack>
-      <StatusBar backgroundColor="#fc4100" barStyle={"light-content"} />
+      <StatusBar backgroundColor="#881b20" barStyle={"light-content"} />
     </>
   );
 };

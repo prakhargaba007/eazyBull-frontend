@@ -47,6 +47,8 @@
     "react-native-url-polyfill": "^2.0.0",
     "react-native-webview": "13.8.6",
     "react-redux": "^9.1.2",
+    "socket": "^0.14.40",
+    "socket.io-client": "^4.8.1",
     "tailwindcss": "^3.3.2"
   },
   "devDependencies": {
